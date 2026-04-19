@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Chronos-Local - Terminal Productivity</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&amp;family=Inter:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {
+                      "on-error": "#690005",
+                      "primary": "#c3f5ff",
+                      "on-secondary": "#303030",
+                      "on-primary-fixed-variant": "#004f58",
+                      "on-tertiary-fixed-variant": "#594400",
+                      "on-primary": "#00363d",
+                      "on-surface": "#e5e2e1",
+                      "error": "#ffb4ab",
+                      "background": "#131313",
+                      "secondary-fixed-dim": "#c8c6c6",
+                      "on-primary-fixed": "#001f24",
+                      "secondary": "#c8c6c6",
+                      "primary-fixed": "#9cf0ff",
+                      "on-secondary-container": "#b6b5b4",
+                      "inverse-primary": "#006875",
+                      "outline-variant": "#3b494c",
+                      "on-tertiary": "#3e2e00",
+                      "secondary-fixed": "#e4e2e1",
+                      "tertiary-container": "#fec931",
+                      "surface-container-highest": "#353534",
+                      "surface-variant": "#353534",
+                      "surface-container-low": "#1c1b1b",
+                      "on-background": "#e5e2e1",
+                      "on-tertiary-fixed": "#251a00",
+                      "tertiary-fixed": "#ffdf96",
+                      "inverse-surface": "#e5e2e1",
+                      "on-secondary-fixed": "#1b1c1c",
+                      "secondary-container": "#474747",
+                      "error-container": "#93000a",
+                      "on-surface-variant": "#bac9cc",
+                      "surface-container-lowest": "#0e0e0e",
+                      "surface-container": "#201f1f",
+                      "on-tertiary-container": "#6f5500",
+                      "tertiary-fixed-dim": "#f3bf26",
+                      "outline": "#849396",
+                      "on-error-container": "#ffdad6",
+                      "surface-dim": "#131313",
+                      "surface-container-high": "#2a2a2a",
+                      "surface": "#131313",
+                      "on-secondary-fixed-variant": "#474747",
+                      "inverse-on-surface": "#313030",
+                      "tertiary": "#ffeac0",
+                      "on-primary-container": "#00626e",
+                      "surface-bright": "#393939",
+                      "primary-container": "#00e5ff",
+                      "surface-tint": "#00daf3",
+                      "primary-fixed-dim": "#00daf3",
+                      "cyber-lime": "#CCFF00",
+                      "muted-slate": "#4A4A4A"
+              },
+              "borderRadius": {
+                      "DEFAULT": "0px",
+                      "lg": "0px",
+                      "xl": "0px",
+                      "full": "0px"
+              },
+              "spacing": {},
+              "fontFamily": {
+                      "headline": ["Space Grotesk", "sans-serif"],
+                      "body": ["Inter", "sans-serif"],
+                      "label": ["Inter", "sans-serif"],
+                      "mono": ["ui-monospace", "SFMono-Regular", "Menlo", "Monaco", "Consolas", "Liberation Mono", "Courier New", "monospace"]
+              }
+      },
+          },
+        }
+    </script>
+<style>
+        body {
+            background-color: #050505;
+            color: #e5e2e1;
+        }
+        /* Custom scrollbar for terminal feel */
+        ::-webkit-scrollbar {
+            width: 4px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #0e0e0e; 
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #353534; 
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #c3f5ff; 
+        }
+    </style>
+</head>
+<body class="font-body antialiased flex h-screen overflow-hidden">
+<!-- TopAppBar -->
+<header class="fixed top-0 w-full z-[40] bg-[#131313] border-b-0 flex justify-between items-center px-4 md:px-6 py-4 pl-4 md:pl-28">
+<div class="flex items-center space-x-4">
+<span class="text-2xl font-bold tracking-[0.2em] text-[#c3f5ff] font-headline uppercase cursor-crosshair active:opacity-80 transition-colors duration-150 hover:text-white">CHRONOS-LOCAL</span>
+</div>
+<div class="flex items-center space-x-6 text-[#c3f5ff]">
+<button aria-label="memory" class="hover:bg-[#2a2a2a] transition-colors duration-150 p-2 cursor-crosshair active:opacity-80 text-[#c3f5ff]">
+<span class="material-symbols-outlined" data-icon="memory">memory</span>
+</button>
+<button aria-label="sensors" class="hover:bg-[#2a2a2a] transition-colors duration-150 p-2 cursor-crosshair active:opacity-80 text-[#c3f5ff]">
+<span class="material-symbols-outlined" data-icon="sensors">sensors</span>
+</button>
+<button aria-label="settings" class="hover:bg-[#2a2a2a] transition-colors duration-150 p-2 cursor-crosshair active:opacity-80 text-[#c3f5ff]">
+<span class="material-symbols-outlined" data-icon="settings">settings</span>
+</button>
+</div>
+</header>
+<!-- SideNavBar -->
+<nav class="fixed bottom-9 md:bottom-auto left-0 md:top-0 w-full md:h-full z-50 flex flex-row md:flex-col items-center md:py-8 md:w-20 border-t border-[#353534]/20 md:border-t-0 md:border-r-0 bg-[#0e0e0e] text-[#c3f5ff] font-mono text-[10px] uppercase tracking-widest md:pt-24 justify-around md:justify-start">
+<div class="flex flex-row md:flex-col items-center md:space-y-8 md:mt-4 w-full justify-around md:justify-center md:flex-1">
+<a class="flex flex-col items-center justify-center flex-1 md:w-full py-2 md:py-4 text-[#353534] hover:text-[#c3f5ff] hover:bg-[#1c1b1b] ease-out duration-150 relative group" href="#">
+<span class="material-symbols-outlined md:mb-2 text-xl" data-icon="database">database</span>
+<span class="hidden md:inline-block opacity-0 group-hover:opacity-100 absolute bottom-1 text-[8px]">archive</span>
+</a>
+<a class="flex flex-col items-center justify-center flex-1 md:w-full py-2 md:py-4 bg-[#c3f5ff] text-black scale-100 ease-out duration-150 relative group" href="#">
+<span class="material-symbols-outlined md:mb-2 text-xl" data-icon="terminal">terminal</span>
+<span class="hidden md:inline-block absolute bottom-1 text-[8px] font-bold">terminal</span>
+</a>
+<a class="flex flex-col items-center justify-center flex-1 md:w-full py-2 md:py-4 text-[#353534] hover:text-[#c3f5ff] hover:bg-[#1c1b1b] ease-out duration-150 relative group" href="#">
+<span class="material-symbols-outlined md:mb-2 text-xl" data-icon="query_stats">query_stats</span>
+<span class="hidden md:inline-block opacity-0 group-hover:opacity-100 absolute bottom-1 text-[8px]">metrics</span>
+</a>
+<a class="flex flex-col items-center justify-center flex-1 md:w-full py-2 md:py-4 text-[#353534] hover:text-[#c3f5ff] hover:bg-[#1c1b1b] ease-out duration-150 relative group" href="#">
+<span class="material-symbols-outlined md:mb-2 text-xl" data-icon="forum">forum</span>
+<span class="hidden md:inline-block opacity-0 group-hover:opacity-100 absolute bottom-1 text-[8px]">ai_chat</span>
+</a>
+<a class="hidden md:flex flex-col items-center justify-center flex-1 md:w-full py-2 md:py-4 text-[#353534] hover:text-[#c3f5ff] hover:bg-[#1c1b1b] ease-out duration-150 relative group" href="#">
+<span class="material-symbols-outlined md:mb-2 text-xl" data-icon="hub">hub</span>
+<span class="hidden md:inline-block opacity-0 group-hover:opacity-100 absolute bottom-1 text-[8px]">network</span>
+</a>
+<a class="hidden md:flex flex-col items-center justify-center flex-1 md:w-full py-2 md:py-4 text-[#353534] hover:text-[#c3f5ff] hover:bg-[#1c1b1b] ease-out duration-150 relative group" href="#">
+<span class="material-symbols-outlined md:mb-2 text-xl" data-icon="lock">lock</span>
+<span class="hidden md:inline-block opacity-0 group-hover:opacity-100 absolute bottom-1 text-[8px]">vault</span>
+</a>
+</div>
+<div class="mt-auto hidden md:flex flex-col items-center justify-center w-full py-4 text-center cursor-help" title="OPERATOR_01">
+<div class="w-10 h-10 bg-surface-container-high overflow-hidden mb-2 relative">
+<img alt="user_identity" class="w-full h-full object-cover grayscale opacity-80 mix-blend-luminosity" data-alt="High contrast black and white headshot of a person looking serious, lit from the side against a dark background" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCpfzO3Y4AHnXVze40D-TwTeoQBVUiifQR6t_AoNA_4IuVrwOEEp0bjpHRMBTpaha9FD0FJLg746xf1rRAueYXveNMj9mOpXWk9gW20DWMTGCs1xrb0SIWN_jlxDrnKlgqaKLxyJiWGqeiAFczbL1VOi3ibCfYz0UzXaQE8ak1atB5SMIooE5FMnjfcwhXTntcpVJmrCHKgmOXgUfzEoMyBwRunh5XsLqImBOQ0MsVQHLgiVCCxbxp7e8aiK00wPcs_1qGOh_1SoYs"/>
+<div class="absolute inset-0 bg-[#c3f5ff] mix-blend-overlay opacity-20"></div>
+</div>
+<span class="text-[8px] text-cyber-lime tracking-tighter">system_active</span>
+</div>
+</nav>
+<!-- Main Content Canvas -->
+<main class="flex-1 ml-0 md:ml-20 mt-[72px] mb-[4.5rem] md:mb-12 p-4 md:p-8 overflow-y-auto bg-[#050505]">
+<div id="view-terminal" class="grid grid-cols-1 lg:grid-cols-12 gap-8 max-w-7xl mx-auto h-full">
+<!-- Left Column: The Plan -->
+<section class="lg:col-span-7 flex flex-col space-y-6">
+<div class="flex justify-between items-end border-b-2 border-surface-container-low pb-2">
+<h1 class="text-2xl font-headline tracking-tight uppercase text-on-surface">Execution Plan</h1>
+<span class="font-mono text-xs text-on-surface-variant">PRIORITY: ALPHA</span>
+</div>
+<div id="task-container" class="flex-1 flex flex-col space-y-3">
+<!-- Tasks will be injected here -->
+</div>
+</section>
+<!-- Right Column: The Reality -->
+<section class="lg:col-span-5 flex flex-col space-y-6">
+<!-- Live Session Card -->
+<div class="bg-surface-container-lowest border-l-2 border-cyber-lime p-8 flex flex-col items-center justify-center relative overflow-hidden group min-h-[300px]">
+<div class="absolute top-4 right-4 animate-pulse">
+<div class="w-2 h-2 bg-cyber-lime"></div>
+</div>
+<span class="font-mono text-xs text-on-surface-variant uppercase tracking-widest mb-6 block text-center">Active Session</span>
+<div class="text-5xl md:text-6xl font-mono text-cyber-lime tracking-tighter mb-8 font-bold" style="text-shadow: 0 0 20px rgba(204, 255, 0, 0.2);">
+                        01:24<span class="opacity-50">:52</span>
+</div>
+<div class="w-full bg-surface-container h-1 mb-6">
+<div class="bg-cyber-lime h-full w-[65%]"></div>
+</div>
+<div class="flex justify-between w-full font-mono text-[10px] text-on-surface-variant uppercase">
+<span>Started: 09:14 AM</span>
+<span>Target: 11:00 AM</span>
+</div>
+</div>
+<!-- Local AI Pulse -->
+<div class="bg-surface-container-low p-6 relative backdrop-blur-md flex-1">
+<div class="flex items-center space-x-3 mb-4 border-b border-surface-container-high pb-2">
+<span class="material-symbols-outlined text-primary text-sm" data-icon="neurology">neurology</span>
+<span class="font-headline text-xs text-primary uppercase tracking-widest font-bold">Local AI Pulse</span>
+<span class="font-mono text-[8px] text-surface-container-highest ml-auto">v2.4.1</span>
+</div>
+<div class="font-mono text-sm leading-relaxed text-on-surface">
+<span class="text-surface-container-highest mr-2">&gt;</span>
+<span id="ai-pulse-text" class="text-on-surface">System standing by. Initiate a task to receive AI telemetry.</span>
+<span class="inline-block w-2 h-4 bg-primary ml-1 align-middle animate-pulse"></span>
+</div>
+<div class="mt-6 flex gap-2">
+<button class="bg-surface-container-highest hover:bg-surface-bright text-xs font-mono py-1 px-3 text-on-surface transition-colors duration-150">Acknowledge</button>
+<button class="bg-transparent border border-surface-container-highest hover:border-primary text-xs font-mono py-1 px-3 text-primary transition-colors duration-150">View Docs</button>
+</div>
+</div>
+</section>
+</div>
+
+<!-- Archive View -->
+<div id="view-archive" class="hidden flex flex-col space-y-6 max-w-7xl mx-auto h-full">
+    <div class="flex justify-between items-end border-b-2 border-surface-container-low pb-2">
+        <h1 class="text-2xl font-headline tracking-tight uppercase text-on-surface">Kinetic Archive</h1>
+        <span class="font-mono text-xs text-on-surface-variant">LOG.COMPLETED</span>
+    </div>
+    <div id="archive-container" class="flex-1 flex flex-col space-y-3">
+        <!-- Archived tasks will be injected here -->
+    </div>
+</div>
+
+<!-- Metrics View -->
+<div id="view-metrics" class="hidden flex flex-col space-y-6 max-w-7xl mx-auto h-full">
+    <div class="flex justify-between items-end border-b-2 border-surface-container-low pb-2">
+        <h1 class="text-2xl font-headline tracking-tight uppercase text-on-surface">System Metrics</h1>
+        <span class="font-mono text-xs text-on-surface-variant">DIAGNOSTICS.LIVE</span>
+    </div>
+    <div class="grid grid-cols-1 sm:grid-cols-3 gap-6">
+        <div class="bg-surface-container-low p-6 flex flex-col items-center justify-center">
+            <span class="font-mono text-sm text-on-surface-variant mb-2">TOTAL MISSIONS</span>
+            <span id="metric-total" class="text-4xl font-headline text-primary font-bold">0</span>
+        </div>
+        <div class="bg-surface-container-low p-6 flex flex-col items-center justify-center">
+            <span class="font-mono text-sm text-on-surface-variant mb-2">TOTAL DURATION</span>
+            <span id="metric-duration" class="text-4xl font-headline text-cyber-lime font-bold">0h</span>
+        </div>
+        <div class="bg-surface-container-low p-6 flex flex-col items-center justify-center">
+            <span class="font-mono text-sm text-on-surface-variant mb-2">EFFICIENCY</span>
+            <span id="metric-efficiency" class="text-4xl font-headline text-[#ffdf96] font-bold">0%</span>
+        </div>
+    </div>
+    <div class="mt-8 bg-surface-container-low p-6 flex flex-col">
+        <div class="flex justify-between items-center mb-4">
+            <h2 class="text-lg font-headline text-primary uppercase">Achievements Analysis (Gemma 4)</h2>
+            <button id="analyze-achievements-btn" class="bg-primary text-[#131313] px-4 py-2 font-mono text-xs font-bold hover:bg-primary-container transition-colors uppercase tracking-widest">Analyze</button>
+        </div>
+        <div id="achievements-output" class="font-mono text-sm text-on-surface whitespace-pre-wrap mt-2 p-4 bg-[#0a0a0a] border border-surface-container-high h-48 overflow-y-auto">No analysis generated yet. Click "Analyze" to run the local Gemma 4 model on your completed tasks.</div>
+    </div>
+</div>
+
+<!-- Chat View -->
+<div id="view-chat" class="hidden flex flex-col max-w-5xl mx-auto h-full pb-10">
+    <div class="flex justify-between items-end border-b-2 border-surface-container-low pb-2 mb-4">
+        <h1 class="text-2xl font-headline tracking-tight uppercase text-on-surface">AI Operator Chat</h1>
+        <div class="flex space-x-2 md:space-x-4 items-center">
+            <span class="font-mono text-[10px] md:text-xs text-cyber-lime hidden sm:inline">MODEL: GEMMA 4</span>
+            <button id="clear-chat-btn" class="text-[10px] md:text-xs font-mono text-on-surface-variant hover:text-error uppercase tracking-widest transition-colors">Clear</button>
+        </div>
+    </div>
+    
+    <div id="chat-history" class="flex-1 overflow-y-auto space-y-4 pr-2 pb-4 flex flex-col bg-[#0a0a0a] border border-surface-container-high p-4">
+        <div class="text-center text-on-surface-variant font-mono text-xs my-4">Chat session initialized. Send a message to begin.</div>
+    </div>
+    
+    <div class="mt-4 flex space-x-2">
+        <input type="text" id="chat-input" class="flex-1 bg-surface-container-low border border-surface-container-high text-on-surface p-3 font-body text-sm focus:border-primary focus:outline-none transition-colors" placeholder="Enter query for local AI..." autocomplete="off">
+        <button id="send-chat-btn" class="bg-primary text-[#131313] px-4 md:px-6 py-2 font-mono text-sm font-bold hover:bg-primary-container transition-colors uppercase tracking-widest">Send</button>
+    </div>
+</div>
+</main>
+<!-- Footer / Bottom Bar -->
+<footer class="fixed bottom-0 left-0 w-full px-0 flex flex-col z-[60] bg-[#0e0e0e] border-t border-[#353534]/20 font-mono text-[9px] uppercase tracking-tighter text-[#c3f5ff]">
+<!-- Life Bar Component -->
+<div class="w-full h-1 flex">
+<!-- Sleep (Muted Blue) -->
+<div class="h-full bg-[#1A365D] w-[33%]" title="Sleep: 8h"></div>
+<!-- Coding (Cyber Lime) -->
+<div class="h-full bg-cyber-lime w-[45%]" title="Coding: 10.5h"></div>
+<!-- Business/Admin (Primary) -->
+<div class="h-full bg-primary w-[15%]" title="Business: 3.5h"></div>
+<!-- Void (Unallocated) -->
+<div class="h-full bg-surface-container-highest w-[7%]"></div>
+</div>
+<div class="flex justify-between items-center px-4 md:px-6 h-8 pl-4 md:pl-28">
+<div class="flex items-center space-x-2 md:space-x-6">
+<span class="text-[#c3f5ff] font-bold text-[8px] md:text-[9px]">SYSTEM: NOMINAL // KINETIC_ARCHIVE_V.1.0</span>
+</div>
+<div class="flex space-x-6 hidden md:flex">
+<a class="text-[#353534] hover:text-[#c3f5ff] transition-colors" href="#">latency_ms</a>
+<a class="text-[#353534] hover:text-[#c3f5ff] transition-colors" href="#">cpu_load</a>
+<a class="text-[#353534] hover:text-[#c3f5ff] transition-colors" href="#">kernel_logs</a>
+</div>
+</div>
+</footer>
+<!-- Create Task Modal -->
+<div id="create-task-modal" class="hidden fixed inset-0 z-[100] bg-black/80 flex items-center justify-center p-4 backdrop-blur-sm">
+    <div class="bg-[#131313] border border-surface-container-high w-full max-w-md p-4 md:p-6">
+        <div class="flex justify-between items-center mb-6 border-b border-surface-container-low pb-2">
+            <h2 class="text-xl font-headline text-primary uppercase tracking-widest">New Execution Task</h2>
+            <button id="close-modal-btn" class="text-on-surface-variant hover:text-white">
+                <span class="material-symbols-outlined">close</span>
+            </button>
+        </div>
+        <form id="create-task-form" class="space-y-4">
+            <div>
+                <label class="block text-xs font-mono text-on-surface-variant mb-1 uppercase">Task Title</label>
+                <input type="text" id="task-title" required class="w-full bg-[#0a0a0a] border border-surface-container-high text-on-surface p-2 font-body text-sm focus:border-primary focus:outline-none transition-colors" placeholder="e.g. Optimize Parsing Engine">
+            </div>
+            <div>
+                <label class="block text-xs font-mono text-on-surface-variant mb-1 uppercase">Description (Optional)</label>
+                <textarea id="task-desc" class="w-full bg-[#0a0a0a] border border-surface-container-high text-on-surface p-2 font-body text-sm h-20 resize-none focus:border-primary focus:outline-none transition-colors" placeholder="Task details..."></textarea>
+            </div>
+            <div class="flex space-x-4">
+                <div class="flex-1">
+                    <label class="block text-xs font-mono text-on-surface-variant mb-1 uppercase">Category</label>
+                    <select id="task-category" class="w-full bg-[#0a0a0a] border border-surface-container-high text-on-surface p-2 font-body text-sm focus:border-primary focus:outline-none transition-colors appearance-none">
+                        <option value="Work">Work</option>
+                        <option value="Business">Business</option>
+                        <option value="Coding">Coding</option>
+                        <option value="Personal">Personal</option>
+                        <option value="Health">Health</option>
+                    </select>
+                </div>
+                <div class="flex-1">
+                    <label class="block text-xs font-mono text-on-surface-variant mb-1 uppercase">Est. Mins</label>
+                    <input type="number" id="task-est" required min="1" value="30" class="w-full bg-[#0a0a0a] border border-surface-container-high text-on-surface p-2 font-body text-sm focus:border-primary focus:outline-none transition-colors">
+                </div>
+            </div>
+            <div class="pt-4 flex justify-end">
+                <button type="submit" class="bg-primary text-[#131313] hover:bg-primary-container px-6 py-2 font-mono text-xs uppercase tracking-widest transition-colors font-bold">
+                    Initialize
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+<!-- Edit Task Modal -->
+<div id="edit-task-modal" class="hidden fixed inset-0 z-[100] bg-black/80 flex items-center justify-center p-4 backdrop-blur-sm">
+    <div class="bg-[#131313] border border-surface-container-high w-full max-w-md p-4 md:p-6">
+        <div class="flex justify-between items-center mb-6 border-b border-surface-container-low pb-2">
+            <h2 class="text-xl font-headline text-[#ffdf96] uppercase tracking-widest">Edit Execution Task</h2>
+            <button id="close-edit-modal-btn" class="text-on-surface-variant hover:text-white">
+                <span class="material-symbols-outlined">close</span>
+            </button>
+        </div>
+        <form id="edit-task-form" class="space-y-4">
+            <input type="hidden" id="edit-task-id">
+            <div>
+                <label class="block text-xs font-mono text-on-surface-variant mb-1 uppercase">Task Title</label>
+                <input type="text" id="edit-task-title" required class="w-full bg-[#0a0a0a] border border-surface-container-high text-on-surface p-2 font-body text-sm focus:border-[#ffdf96] focus:outline-none transition-colors">
+            </div>
+            <div>
+                <label class="block text-xs font-mono text-on-surface-variant mb-1 uppercase">Description (Optional)</label>
+                <textarea id="edit-task-desc" class="w-full bg-[#0a0a0a] border border-surface-container-high text-on-surface p-2 font-body text-sm h-20 resize-none focus:border-[#ffdf96] focus:outline-none transition-colors"></textarea>
+            </div>
+            <div class="flex space-x-4">
+                <div class="flex-1">
+                    <label class="block text-xs font-mono text-on-surface-variant mb-1 uppercase">Category</label>
+                    <select id="edit-task-category" class="w-full bg-[#0a0a0a] border border-surface-container-high text-on-surface p-2 font-body text-sm focus:border-[#ffdf96] focus:outline-none transition-colors appearance-none">
+                        <option value="Work">Work</option>
+                        <option value="Business">Business</option>
+                        <option value="Coding">Coding</option>
+                        <option value="Personal">Personal</option>
+                        <option value="Health">Health</option>
+                    </select>
+                </div>
+                <div class="flex-1">
+                    <label class="block text-xs font-mono text-on-surface-variant mb-1 uppercase">Est. Mins</label>
+                    <input type="number" id="edit-task-est" required min="1" class="w-full bg-[#0a0a0a] border border-surface-container-high text-on-surface p-2 font-body text-sm focus:border-[#ffdf96] focus:outline-none transition-colors">
+                </div>
+            </div>
+            <div class="pt-4 flex justify-end">
+                <button type="submit" class="bg-[#ffdf96] text-[#131313] hover:bg-tertiary-container px-6 py-2 font-mono text-xs uppercase tracking-widest transition-colors font-bold">
+                    Update
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+<script type="module" src="/main.js"></script>
+</body></html>
