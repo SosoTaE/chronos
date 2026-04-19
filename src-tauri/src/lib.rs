@@ -1,11 +1,11 @@
 use chronos_lib::{init_db, commands};
 use sea_orm::DatabaseConnection;
-use chronos_lib::entities::task::{Model as TaskModel, TaskCategory, TaskStatus, TimeSession};
+use chronos_lib::entities::task::{Model as TaskModel, TaskCategory, TaskStatus, TimeSession, Note};
 use chronos_lib::services::ai_service::ChatMessage;
-use tauri::State;
+use tauri::{Emitter, State};
+use tauri_plugin_notification::NotificationExt;
 use std::sync::Arc;
-
-mod webhook_server;
+use std::time::Duration;
 
 #[tauri::command]
 fn greet(name: &str) -> String {
@@ -96,6 +96,26 @@ async fn chat_with_ai_command(history: Vec<ChatMessage>) -> Result<ChatMessage, 
     commands::ai::chat_with_ai_command(history).await
 }
 
+#[tauri::command]
+async fn add_note_command(db: State<'_, DatabaseConnection>, task_id: String, content: String) -> Result<TaskModel, String> {
+    commands::notes::add_note_command(&*db, task_id, content).await
+}
+
+#[tauri::command]
+async fn get_notes_command(db: State<'_, DatabaseConnection>, task_id: String) -> Result<Vec<Note>, String> {
+    commands::notes::get_notes_command(&*db, task_id).await
+}
+
+#[tauri::command]
+async fn update_note_command(db: State<'_, DatabaseConnection>, task_id: String, note_id: String, content: String) -> Result<TaskModel, String> {
+    commands::notes::update_note_command(&*db, task_id, note_id, content).await
+}
+
+#[tauri::command]
+async fn delete_note_command(db: State<'_, DatabaseConnection>, task_id: String, note_id: String) -> Result<TaskModel, String> {
+    commands::notes::delete_note_command(&*db, task_id, note_id).await
+}
+
 use tauri::Manager;
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
@@ -105,6 +125,7 @@ pub fn run() {
 
     tauri::Builder::default()
         .plugin(tauri_plugin_opener::init())
+        .plugin(tauri_plugin_notification::init())
         .setup(|app| {
             // Set up proper app data directory for the database to ensure persistence
             let mut db_path = app.path().app_data_dir().unwrap_or_else(|_| std::path::PathBuf::from("."));
@@ -117,13 +138,46 @@ pub fn run() {
                 init_db().await.expect("Failed to initialize database")
             });
 
-            // Start the webhook server in the background
+            // Start the process monitor daemon
             let db_arc = Arc::new(db.clone());
+            let app_handle = app.handle().clone();
+
             tauri::async_runtime::spawn(async move {
-                if let Err(e) = webhook_server::start_webhook_server(db_arc).await {
-                    eprintln!("[Tauri] Failed to start webhook server: {}", e);
-                } else {
-                    println!("[Tauri] Webhook server started successfully");
+                println!("[Process Monitor] Starting background daemon (60s interval)");
+                let mut interval = tokio::time::interval(Duration::from_secs(60));
+
+                loop {
+                    interval.tick().await;
+
+                    match chronos_lib::services::process_monitor::check_and_generate_nudge(&db_arc).await {
+                        Ok(Some(nudge)) => {
+                            println!(
+                                "[Process Monitor] Detected processes: {:?} - Sending nudge",
+                                nudge.detected_processes
+                            );
+
+                            // Send system notification
+                            let process_list = nudge.detected_processes.join(", ");
+                            if let Err(e) = app_handle.notification()
+                                .builder()
+                                .title("Chronos - Process Detected")
+                                .body(format!("{}\n\nDetected: {}", nudge.message, process_list))
+                                .show() {
+                                eprintln!("[Process Monitor] Failed to show notification: {}", e);
+                            }
+
+                            // Also emit event for in-app notification
+                            if let Err(e) = app_handle.emit("process-nudge", &nudge) {
+                                eprintln!("[Process Monitor] Failed to emit event: {}", e);
+                            }
+                        }
+                        Ok(None) => {
+                            // No nudge needed (either no processes or timer is active)
+                        }
+                        Err(e) => {
+                            eprintln!("[Process Monitor] Error: {}", e);
+                        }
+                    }
                 }
             });
 
@@ -146,6 +200,10 @@ pub fn run() {
             check_ollama_health_command,
             analyze_achievements_command,
             chat_with_ai_command,
+            add_note_command,
+            get_notes_command,
+            update_note_command,
+            delete_note_command,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

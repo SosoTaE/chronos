@@ -1,4 +1,5 @@
 const { invoke } = window.__TAURI__.core;
+const { listen } = window.__TAURI__.event;
 
 // DOM Elements
 const views = {
@@ -28,6 +29,63 @@ let tasks = [];
 let activeTimerInterval = null;
 let currentActiveTask = null;
 let currentView = "terminal";
+
+// Process nudge notification
+function showProcessNudge(nudge) {
+    const notificationContainer = document.getElementById("nudge-notification");
+    if (!notificationContainer) {
+        // Create notification container if it doesn't exist
+        const container = document.createElement("div");
+        container.id = "nudge-notification";
+        container.className = "fixed top-20 right-4 z-[200] max-w-md";
+        document.body.appendChild(container);
+    }
+
+    const notification = document.createElement("div");
+    notification.className = "bg-surface-container-low border-l-4 border-cyber-lime p-4 shadow-lg mb-2 animate-fade-in";
+    notification.innerHTML = `
+        <div class="flex items-start">
+            <span class="material-symbols-outlined text-cyber-lime mr-3 text-xl">timer</span>
+            <div class="flex-1">
+                <h3 class="font-mono text-sm text-cyber-lime mb-1 uppercase">Process Detected</h3>
+                <p class="font-body text-sm text-on-surface mb-2">${nudge.message}</p>
+                <div class="flex items-center space-x-2 mb-2">
+                    ${nudge.detected_processes.map(p =>
+                        `<span class="bg-surface-container-highest px-2 py-0.5 text-xs font-mono text-on-surface-variant">${p}</span>`
+                    ).join('')}
+                </div>
+                <div class="flex space-x-2">
+                    <button onclick="openCreateModal()" class="bg-cyber-lime text-black px-3 py-1 text-xs font-mono uppercase hover:bg-primary transition-colors">
+                        Start Timer
+                    </button>
+                    <button onclick="dismissNudge(this)" class="bg-transparent border border-surface-container-high px-3 py-1 text-xs font-mono text-on-surface-variant hover:text-on-surface transition-colors">
+                        Dismiss
+                    </button>
+                </div>
+            </div>
+        </div>
+    `;
+
+    const container = document.getElementById("nudge-notification");
+    container.appendChild(notification);
+
+    // Auto-dismiss after 30 seconds
+    setTimeout(() => {
+        notification.remove();
+    }, 30000);
+}
+
+window.dismissNudge = function(button) {
+    const notification = button.closest(".bg-surface-container-low");
+    if (notification) {
+        notification.remove();
+    }
+};
+
+window.openCreateModal = function() {
+    modal.classList.remove("hidden");
+    document.getElementById("task-title").focus();
+};
 
 // View Navigation
 document.querySelectorAll('nav a').forEach(link => {
@@ -370,15 +428,21 @@ createForm.addEventListener("submit", async (e) => {
 window.openEditModal = (taskId) => {
     const task = tasks.find(t => t.id === taskId);
     if (!task) return;
-    
+
+    currentTaskId = task.id; // Set current task ID for notes
+
     document.getElementById("edit-task-id").value = task.id;
     document.getElementById("edit-task-title").value = task.title;
     document.getElementById("edit-task-desc").value = task.description || "";
     document.getElementById("edit-task-category").value = task.category;
     document.getElementById("edit-task-est").value = task.estimated_duration_mins;
-    
+
     editModal.classList.remove("hidden");
     document.getElementById("edit-task-title").focus();
+
+    // Load notes for this task
+    loadNotes(taskId);
+    hideAddNoteInput(); // Ensure add note input is hidden
 };
 
 function closeEditModal() {
@@ -558,8 +622,156 @@ async function initApp() {
     // Ensure terminal view is visible initially
     switchView("terminal");
 
+    // Listen for process nudges from the Rust backend
+    await listen("process-nudge", (event) => {
+        console.log("[Process Monitor] Received nudge:", event.payload);
+        showProcessNudge(event.payload);
+    });
+
+    console.log("[Process Monitor] Event listener registered");
+
     await fetchTasks();
 }
+
+// ===== NOTES SYSTEM =====
+let currentTaskId = null;
+
+window.showAddNoteInput = function() {
+    document.getElementById("add-note-input").classList.remove("hidden");
+    document.getElementById("new-note-content").focus();
+};
+
+window.hideAddNoteInput = function() {
+    document.getElementById("add-note-input").classList.add("hidden");
+    document.getElementById("new-note-content").value = "";
+};
+
+window.addNote = async function() {
+    const content = document.getElementById("new-note-content").value.trim();
+    if (!content) {
+        alert("Note content cannot be empty");
+        return;
+    }
+
+    if (!currentTaskId) {
+        alert("No task selected");
+        return;
+    }
+
+    try {
+        await invoke("add_note_command", { taskId: currentTaskId, content });
+        await loadNotes(currentTaskId);
+        hideAddNoteInput();
+        await fetchTasks(); // Refresh task list
+    } catch (e) {
+        console.error("Failed to add note:", e);
+        alert("Failed to add note: " + e);
+    }
+};
+
+async function loadNotes(taskId) {
+    try {
+        const notes = await invoke("get_notes_command", { taskId });
+        renderNotes(notes);
+    } catch (e) {
+        console.error("Failed to load notes:", e);
+    }
+}
+
+function renderNotes(notes) {
+    const container = document.getElementById("notes-container");
+    if (!notes || notes.length === 0) {
+        container.innerHTML = '<p class="text-on-surface-variant text-sm font-body italic">No notes yet. Add one to get started!</p>';
+        return;
+    }
+
+    // Sort notes by created_at descending (newest first)
+    const sortedNotes = [...notes].sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+
+    container.innerHTML = sortedNotes.map(note => {
+        const createdDate = new Date(note.created_at).toLocaleString();
+        const updatedDate = note.updated_at !== note.created_at ? new Date(note.updated_at).toLocaleString() : null;
+
+        return `
+            <div class="bg-[#0a0a0a] border border-surface-container-low p-3" data-note-id="${note.id}">
+                <div class="flex justify-between items-start mb-2">
+                    <span class="text-xs font-mono text-on-surface-variant">
+                        ${createdDate}${updatedDate ? ` (edited: ${updatedDate})` : ''}
+                    </span>
+                    <div class="flex space-x-2">
+                        <button onclick="editNote('${note.id}')" class="text-cyber-lime hover:text-primary text-xs">
+                            <span class="material-symbols-outlined text-sm">edit</span>
+                        </button>
+                        <button onclick="deleteNote('${note.id}')" class="text-error hover:text-red-400 text-xs">
+                            <span class="material-symbols-outlined text-sm">delete</span>
+                        </button>
+                    </div>
+                </div>
+                <p class="text-on-surface text-sm font-body whitespace-pre-wrap note-content">${escapeHtml(note.content)}</p>
+                <textarea class="hidden w-full bg-surface-container-low border border-surface-container-high text-on-surface p-2 font-body text-sm focus:border-cyber-lime focus:outline-none transition-colors min-h-[60px] note-edit-textarea">${escapeHtml(note.content)}</textarea>
+                <div class="hidden mt-2 space-x-2 note-edit-actions">
+                    <button onclick="saveNoteEdit('${note.id}')" class="bg-cyber-lime text-black px-3 py-1 text-xs font-mono uppercase hover:bg-primary transition-colors">Save</button>
+                    <button onclick="cancelNoteEdit('${note.id}')" class="bg-transparent border border-surface-container-high px-3 py-1 text-xs font-mono text-on-surface-variant hover:text-on-surface transition-colors">Cancel</button>
+                </div>
+            </div>
+        `;
+    }).join('');
+}
+
+function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+
+window.editNote = function(noteId) {
+    const noteDiv = document.querySelector(`[data-note-id="${noteId}"]`);
+    noteDiv.querySelector('.note-content').classList.add('hidden');
+    noteDiv.querySelector('.note-edit-textarea').classList.remove('hidden');
+    noteDiv.querySelector('.note-edit-actions').classList.remove('hidden');
+    noteDiv.querySelector('.note-edit-textarea').focus();
+};
+
+window.cancelNoteEdit = function(noteId) {
+    const noteDiv = document.querySelector(`[data-note-id="${noteId}"]`);
+    noteDiv.querySelector('.note-content').classList.remove('hidden');
+    noteDiv.querySelector('.note-edit-textarea').classList.add('hidden');
+    noteDiv.querySelector('.note-edit-actions').classList.add('hidden');
+};
+
+window.saveNoteEdit = async function(noteId) {
+    const noteDiv = document.querySelector(`[data-note-id="${noteId}"]`);
+    const content = noteDiv.querySelector('.note-edit-textarea').value.trim();
+
+    if (!content) {
+        alert("Note content cannot be empty");
+        return;
+    }
+
+    try {
+        await invoke("update_note_command", { taskId: currentTaskId, noteId, content });
+        await loadNotes(currentTaskId);
+        await fetchTasks(); // Refresh task list
+    } catch (e) {
+        console.error("Failed to update note:", e);
+        alert("Failed to update note: " + e);
+    }
+};
+
+window.deleteNote = async function(noteId) {
+    if (!confirm("Are you sure you want to delete this note?")) {
+        return;
+    }
+
+    try {
+        await invoke("delete_note_command", { taskId: currentTaskId, noteId });
+        await loadNotes(currentTaskId);
+        await fetchTasks(); // Refresh task list
+    } catch (e) {
+        console.error("Failed to delete note:", e);
+        alert("Failed to delete note: " + e);
+    }
+};
 
 if (document.readyState === 'loading') {
     window.addEventListener("DOMContentLoaded", initApp);

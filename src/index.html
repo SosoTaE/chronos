@@ -107,17 +107,6 @@
 <div class="flex items-center space-x-4">
 <span class="text-2xl font-bold tracking-[0.2em] text-[#c3f5ff] font-headline uppercase cursor-crosshair active:opacity-80 transition-colors duration-150 hover:text-white">CHRONOS-LOCAL</span>
 </div>
-<div class="flex items-center space-x-6 text-[#c3f5ff]">
-<button aria-label="memory" class="hover:bg-[#2a2a2a] transition-colors duration-150 p-2 cursor-crosshair active:opacity-80 text-[#c3f5ff]">
-<span class="material-symbols-outlined" data-icon="memory">memory</span>
-</button>
-<button aria-label="sensors" class="hover:bg-[#2a2a2a] transition-colors duration-150 p-2 cursor-crosshair active:opacity-80 text-[#c3f5ff]">
-<span class="material-symbols-outlined" data-icon="sensors">sensors</span>
-</button>
-<button aria-label="settings" class="hover:bg-[#2a2a2a] transition-colors duration-150 p-2 cursor-crosshair active:opacity-80 text-[#c3f5ff]">
-<span class="material-symbols-outlined" data-icon="settings">settings</span>
-</button>
-</div>
 </header>
 <!-- SideNavBar -->
 <nav class="fixed bottom-9 md:bottom-auto left-0 md:top-0 w-full md:h-full z-50 flex flex-row md:flex-col items-center md:py-8 md:w-20 border-t border-[#353534]/20 md:border-t-0 md:border-r-0 bg-[#0e0e0e] text-[#c3f5ff] font-mono text-[10px] uppercase tracking-widest md:pt-24 justify-around md:justify-start">
@@ -137,14 +126,6 @@
 <a class="flex flex-col items-center justify-center flex-1 md:w-full py-2 md:py-4 text-[#353534] hover:text-[#c3f5ff] hover:bg-[#1c1b1b] ease-out duration-150 relative group" href="#">
 <span class="material-symbols-outlined md:mb-2 text-xl" data-icon="forum">forum</span>
 <span class="hidden md:inline-block opacity-0 group-hover:opacity-100 absolute bottom-1 text-[8px]">ai_chat</span>
-</a>
-<a class="hidden md:flex flex-col items-center justify-center flex-1 md:w-full py-2 md:py-4 text-[#353534] hover:text-[#c3f5ff] hover:bg-[#1c1b1b] ease-out duration-150 relative group" href="#">
-<span class="material-symbols-outlined md:mb-2 text-xl" data-icon="hub">hub</span>
-<span class="hidden md:inline-block opacity-0 group-hover:opacity-100 absolute bottom-1 text-[8px]">network</span>
-</a>
-<a class="hidden md:flex flex-col items-center justify-center flex-1 md:w-full py-2 md:py-4 text-[#353534] hover:text-[#c3f5ff] hover:bg-[#1c1b1b] ease-out duration-150 relative group" href="#">
-<span class="material-symbols-outlined md:mb-2 text-xl" data-icon="lock">lock</span>
-<span class="hidden md:inline-block opacity-0 group-hover:opacity-100 absolute bottom-1 text-[8px]">vault</span>
 </a>
 </div>
 <div class="mt-auto hidden md:flex flex-col items-center justify-center w-full py-4 text-center cursor-help" title="OPERATOR_01">
@@ -374,6 +355,30 @@
                 </button>
             </div>
         </form>
+
+        <!-- Notes Section -->
+        <div class="mt-6 border-t border-surface-container-low pt-6">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-lg font-headline text-cyber-lime uppercase tracking-widest">Notes</h3>
+                <button onclick="showAddNoteInput()" class="bg-surface-container-high hover:bg-surface-bright text-cyber-lime px-3 py-1 text-xs font-mono uppercase transition-colors">
+                    + Add Note
+                </button>
+            </div>
+
+            <!-- Add Note Input (Hidden by default) -->
+            <div id="add-note-input" class="hidden mb-4">
+                <textarea id="new-note-content" class="w-full bg-[#0a0a0a] border border-surface-container-high text-on-surface p-3 font-body text-sm focus:border-cyber-lime focus:outline-none transition-colors min-h-[80px]" placeholder="Write your note here..."></textarea>
+                <div class="flex space-x-2 mt-2">
+                    <button onclick="addNote()" class="bg-cyber-lime text-black px-4 py-1 text-xs font-mono uppercase hover:bg-primary transition-colors">Save</button>
+                    <button onclick="hideAddNoteInput()" class="bg-transparent border border-surface-container-high px-4 py-1 text-xs font-mono text-on-surface-variant hover:text-on-surface transition-colors">Cancel</button>
+                </div>
+            </div>
+
+            <!-- Notes List -->
+            <div id="notes-container" class="space-y-3">
+                <!-- Notes will be injected here -->
+            </div>
+        </div>
     </div>
 </div>
 <script type="module" src="/main.js"></script>
