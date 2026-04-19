@@ -3,6 +3,9 @@ use sea_orm::DatabaseConnection;
 use chronos_lib::entities::task::{Model as TaskModel, TaskCategory, TaskStatus, TimeSession};
 use chronos_lib::services::ai_service::ChatMessage;
 use tauri::State;
+use std::sync::Arc;
+
+mod webhook_server;
 
 #[tauri::command]
 fn greet(name: &str) -> String {
@@ -107,11 +110,21 @@ pub fn run() {
             let mut db_path = app.path().app_data_dir().unwrap_or_else(|_| std::path::PathBuf::from("."));
             std::fs::create_dir_all(&db_path).unwrap_or(());
             db_path.push("chronos.db");
-            
+
             std::env::set_var("CHRONOS_DB_PATH", db_path.to_str().unwrap());
 
             let db = tauri::async_runtime::block_on(async {
                 init_db().await.expect("Failed to initialize database")
+            });
+
+            // Start the webhook server in the background
+            let db_arc = Arc::new(db.clone());
+            tauri::async_runtime::spawn(async move {
+                if let Err(e) = webhook_server::start_webhook_server(db_arc).await {
+                    eprintln!("[Tauri] Failed to start webhook server: {}", e);
+                } else {
+                    println!("[Tauri] Webhook server started successfully");
+                }
             });
 
             app.manage(db);
